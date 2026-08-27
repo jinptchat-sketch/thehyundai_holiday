@@ -3,10 +3,7 @@
  "meta": {
   "eyebrow": "2026 추석 행사",
   "title": "이관일 데스크",
-  "password": "1111",
-  "updatedAt": "2026-08-26",
-  "updatedBy": "",
-  "updateNote": "최초 배포"
+  "password": "1111"
  },
  "blocks": [
   {
@@ -964,6 +961,61 @@
       "문산리",
       "외동산업단지"
      ]
+    }
+   ]
+  },
+  {
+   "id": "cj-rural",
+   "center": "CJ대한통운",
+   "sub": "택배 배송",
+   "items": [
+    "general",
+    "cold"
+   ],
+   "nationwide": true,
+   "itemsText": "일반상품, 정육·냉장육",
+   "main": "2026-09-11~2026-09-24",
+   "exclude": "",
+   "post": "2026-09-28~2026-09-29",
+   "postExclude": "",
+   "cutoff": {
+    "general": {
+     "d": 2,
+     "t": "16:00"
+    },
+    "cold": {
+     "d": 2,
+     "t": "16:00"
+    }
+   },
+   "postCutoff": {
+    "general": {
+     "d": 2,
+     "t": "15:00"
+    },
+    "cold": {
+     "d": 2,
+     "t": "15:00"
+    }
+   },
+   "notes": [
+    "거점 차량이 들어가지 않는 읍·면·리 지역이라 CJ 택배로 발송합니다",
+    "냉장 차량이 아닌 일반 차량으로 배송됩니다"
+   ],
+   "areas": [
+    {
+     "nation": true,
+     "m": "rural",
+     "denySido": [
+      "제주특별자치도"
+     ],
+     "denySgg": [
+      "강화군",
+      "옹진군",
+      "울릉군",
+      "신안군"
+     ],
+     "islandWhy": "도서산간 지역은 신선식품을 보낼 수 없습니다 (가공식품은 CJ택배 가능)"
     }
    ]
   }
