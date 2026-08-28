@@ -158,7 +158,7 @@ button,input{font:inherit;color:inherit}
 .pane .deadline{background:var(--surface)}
 .pane .flag{background:var(--surface);border-color:var(--line)}
 .stripe.plain{background:var(--surface2)}
-.pk{font-size:17px;font-weight:800;letter-spacing:-.015em}
+.pk{font-size:14pt;font-weight:800;letter-spacing:-.015em}
 .ps{font-size:12.5px;color:var(--muted);margin:2px 0 13px}
 .pane .answer{font-size:clamp(21px,3.4vw,30px);font-weight:900;letter-spacing:-.03em;line-height:1.06}
 .pane.off .answer{color:var(--bad);font-size:clamp(16px,2.4vw,20px);font-weight:800}
@@ -997,7 +997,7 @@ function computeAnswer(cand,item){
   if(top.e.stale) notes=["⚠ 관리자가 지정한 이관일이 행사 운영 기간을 넘었습니다. 관리자 설정에서 날짜를 다시 확인하세요."].concat(notes);
   out.ok=true; out.top=top; out.mode=mode; out.notes=notes;
   out.vclass=(mode==="parcel")?"partial":top.j.v;
-  out.tag=(mode==="parcel")?"택배 배송":(top.j.v==="yes"?"배송 가능":"조건부 가능");
+  out.tag=(mode==="center")?"백화점 택배차량":"일반배송";
   return out;
 }
 function dlHtml(e){
@@ -1018,7 +1018,7 @@ function paneHtml(label,sub,a){
       '<div class="ps">'+esc(sub)+'</div>'+
       '<div class="answer">'+esc(a.title)+'</div>'+
       '<div class="preason">'+esc(a.reason)+'</div></div>';
-  var cls=(a.vclass==="yes")?"ok":"warn";
+  var cls=(a.mode==="center")?"ok":"warn";
   return '<div class="pane '+cls+'">'+
     '<div class="phead"><span class="pk">'+esc(label)+'</span>'+
       '<span class="pbadge">'+esc(a.tag)+'</span></div>'+
