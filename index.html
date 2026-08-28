@@ -136,9 +136,43 @@ button,input{font:inherit;color:inherit}
 .card.no .answer,.card.ask .answer{font-size:clamp(21px,4.6vw,27px);letter-spacing:-.02em;font-weight:800}
 .card.no .answer{color:var(--bad)}
 .via{display:flex;flex-direction:column;gap:1px;min-width:0}
-.via .vk{font-size:10.5px;font-weight:700;letter-spacing:.16em;color:var(--muted2)}
-.via b{font-size:clamp(19px,3.8vw,27px);font-weight:800;letter-spacing:-.02em;color:var(--ink);line-height:1.14}
-.via .vs{font-size:12.5px;color:var(--muted);font-weight:500}
+.via .vk{font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--muted2)}
+.via b{font-size:clamp(24px,5.4vw,36px);font-weight:800;letter-spacing:-.025em;color:var(--ink);line-height:1.1}
+.via .vs{font-size:13px;color:var(--muted);font-weight:500}
+
+/* ── 경우가 둘로 갈릴 때 나란히 ── */
+.bodyflat{padding:0}
+.panes{display:grid;grid-template-columns:1fr 1fr}
+.pane{padding:20px 22px 20px;min-width:0;border-top:3px solid transparent}
+.pane+.pane{border-left:1px solid var(--line)}
+.pane.ok  {border-top-color:var(--ok);  background:var(--ok-bg)}
+.pane.warn{border-top-color:var(--warn);background:var(--warn-bg)}
+.pane.off {border-top-color:var(--bad); background:var(--bad-bg)}
+.phead{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:2px}
+.pbadge{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 9px;border-radius:6px;color:#fff;white-space:nowrap}
+.pane.ok .pbadge{background:var(--ok)}
+.pane.warn .pbadge{background:var(--warn)}
+.pane.off .pbadge{background:var(--bad)}
+:root[data-theme="dark"] .pbadge,
+:root:not([data-theme="light"]) .pbadge{color:var(--ground)}
+.pane .deadline{background:var(--surface)}
+.pane .flag{background:var(--surface);border-color:var(--line)}
+.stripe.plain{background:var(--surface2)}
+.pk{font-size:13.5px;font-weight:800;letter-spacing:-.01em}
+.ps{font-size:11.5px;color:var(--muted);margin:1px 0 12px}
+.pane .answer{font-size:clamp(21px,3.4vw,30px);font-weight:900;letter-spacing:-.03em;line-height:1.06}
+.pane.off .answer{color:var(--bad);font-size:clamp(16px,2.4vw,20px);font-weight:800}
+.preason{font-size:12px;color:var(--muted);margin-top:9px;line-height:1.5}
+.pane .via{margin-top:9px}
+.pane .via b{font-size:clamp(18px,2.9vw,25px);line-height:1.12}
+.pane .deadline{margin-top:12px;padding:10px 12px}
+.pane .deadline .v{font-size:15px}
+.pane .flag{margin-top:10px;font-size:11.5px;padding:8px 11px}
+.panefoot{padding:0 22px 20px}
+@media(max-width:720px){
+  .panes{grid-template-columns:1fr}
+  .pane+.pane{border-left:0;border-top:1px solid var(--line)}
+}
 
 .deadline{margin-top:18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;
   padding:14px 17px;background:var(--surface2);border:1px solid var(--line2);
@@ -687,9 +721,11 @@ function judgeOne(r,sido,sgg,emd){
           else if(ITEM==="general"&&PRICE==="under")
             cr={v:"yes",why:"10만원 이하 주문이라 택배로 발송합니다",label:sgg,nation:true};
           else
-            cr={v:"no",why:"동 지역은 거점 차량 배송 권역입니다",label:sgg};
+            /* 동 지역이라도 거점 권역이 아니면 택배가 답이 된다.
+               거점 권역이면 아래 선택 단계에서 거점이 먼저 뽑히므로 이 값은 쓰이지 않는다. */
+            cr={v:"yes",why:"거점 차량 배송 권역이 아니어서 택배로 발송합니다",label:sgg,nation:true,fallback:true};
         } else {
-          cr={v:"partial",why:"읍·면·리 지역은 택배로 발송합니다 (동 지역은 거점 차량)",label:sgg,nation:true};
+          cr={v:"yes",why:"거점 권역이 아닌 곳은 택배로 발송합니다",label:sgg,nation:true,fallback:true};
         }
         best=pick(best,cr); continue;
       }
@@ -769,10 +805,14 @@ function renderTabs(){
   Array.prototype.forEach.call($("tabs").children,function(b){
     b.onclick=function(){ITEM=b.dataset.k;renderTabs();renderResult();renderOverview();};});
 }
-function renderPrice(cls){
-  var box=$("priceTabs"), sec=$("priceStep"); if(!box||!sec) return;
+function renderPrice(cls,hasCenter){
+  var sec=$("priceStep"); if(sec) sec.style.display="none"; return;   /* 선택 대신 결과를 나란히 보여준다 */
+  /* eslint-disable no-unreachable */
+  var box=$("priceTabs"); if(!box||!sec) return;
   /* 읍·면·리는 금액과 무관하게 택배이므로 묻지 않는다 */
   if(ITEM!=="general"||!cls||cls==="rural"){ sec.style.display="none"; return; }
+  /* 거점이 아예 안 잡히는 동 지역도 금액과 무관하게 택배 — 묻지 않는다 */
+  if(cls==="dong"&&hasCenter===false){ sec.style.display="none"; return; }
   sec.style.display="flex";
   var island=(cls==="island");
   var list=island?FRESH_TYPES:PRICE_TYPES, cur=island?FRESH:PRICE;
@@ -820,7 +860,7 @@ function renderResult(){
   var cand=null;
   if(cands.length===1) cand=cands[0];
   else if(PICKED){ for(var i=0;i<cands.length;i++) if(cands[i].label===PICKED) cand=cands[i]; }
-  else if(covered.length===1) cand=covered[0];
+  /* 같은 이름이 여러 곳이면 자동으로 고르지 않는다 — 엉뚱한 지역으로 안내될 수 있다 */
   if(!cand){
     var show=cands.slice(0,10), rest=cands.length-show.length;
     $("result").innerHTML=card("ask","지역 선택",esc(q),
@@ -834,32 +874,8 @@ function renderResult(){
       b.onclick=function(){PICKED=b.dataset.l;renderResult();};});
     return;
   }
-  renderPrice(regionClass(cand));        /* 거점이 정해진 뒤, 지역 성격에 맞는 질문만 */
   var itemName=ITEM_TYPES.filter(function(t){return t.k===ITEM;})[0].n;
-
-  var blk=blockFor(cand,ITEM);
-  if(blk&&blk.reason){
-    var ok=shippableItems(cand);
-    $("result").innerHTML=card("no","발송 불가",esc(cand.label)+' · '+itemName,
-      '<div class="overline">이 지역·품목은 보낼 수 없습니다</div>'+
-      '<div class="answer">발송 불가</div>'+
-      '<div class="flag"><span>'+esc(blk.reason)+'</span></div>'+
-      '<div class="facts">'+
-        (ok.length?'<div>이 지역으로 보낼 수 있는 품목 <b>'+esc(ok.join(" · "))+'</b></div>'
-                  :'<div>이 지역으로 보낼 수 있는 품목이 없습니다.</div>')+
-        '<div>고객에게는 발송이 불가하다고 안내하고 주문을 취소·변경해야 합니다.</div></div>');
-    return;
-  }
-
-  var hits=searchRoutes(cand,ITEM);
-  /* 관리자가 지정한 거점을 먼저, 그다음 빠른 날짜 순 */
-  function byDate(a,b){
-    var m=(a.e.manual?0:1)-(b.e.manual?0:1); if(m) return m;
-    return a.e.date<b.e.date?-1:a.e.date>b.e.date?1:0;
-  }
-  var regional=hits.filter(function(h){return !h.r.nationwide&&h.j.v!=="no"&&h.e;}).sort(byDate);
-  var parcel  =hits.filter(function(h){return h.r.nationwide&&h.e;}).sort(byDate);
-  var blocked =hits.filter(function(h){return !h.r.nationwide&&h.j.v==="no";});
+  renderPrice(null,false);
 
   var others=cands.filter(function(c){return c.label!==cand.label;}).slice(0,6);
   var switcher = others.length
@@ -867,78 +883,152 @@ function renderResult(){
         others.map(function(c){return '<button class="chip" data-l="'+esc(c.label)+'">'+esc(c.label)+'</button>';}).join(" ")+'</div></div>'
     : '';
 
-  var top, mode;
-  var hanjin=hits.filter(function(h){return h.r.items.indexOf("hanjin")>-1&&h.e;}).sort(byDate);
-  var cjHit=hits.filter(function(h){return h.r.id==="cj-rural"&&h.e;})[0];
   var rc=regionClass(cand);
-  if(ITEM==="general"&&cjHit&&((rc==="dong"&&PRICE==="under")||(rc==="island"&&FRESH==="processed"))){
-    top=cjHit; mode="parcel";
-  }
-  else if(ITEM==="hanjin"&&hanjin.length){ top=hanjin[0]; mode="parcel"; }
-  else if(regional.length){ top=regional[0]; mode="center"; }
-  else if(parcel.length){ top=parcel[0]; mode="parcel"; }
-  else {
-    var ok=shippableItems(cand);
-    var ended=hits.some(function(h){return h.j.v!=="no";});   // 규칙엔 맞지만 날짜가 없다
-    $("result").innerHTML=card("no","배송 불가",esc(cand.label)+' · '+itemName,
-      '<div class="overline">결과</div>'+
-      '<div class="answer">'+(ended?"남은 발송일이 없습니다":"배송 불가")+'</div>'+
-      '<div class="flag"><span>'+
-        (ended ? "행사 운영 기간이 끝났거나 모든 이관 마감이 지났습니다."
-               : (blocked.length ? blocked[0].j.why : "이 지역은 "+esc(itemName)+" 배송 권역이 아닙니다."))+
-      '</span></div>'+
-      '<div class="facts">'+
-        (ok.length?'<div>이 지역으로 보낼 수 있는 품목 <b>'+esc(ok.join(" · "))+'</b></div>'
-                  :'<div>이 지역으로 보낼 수 있는 품목이 없습니다.</div>')+
-      '</div>'+switcher)+moreTable(hits);
+  var base=computeAnswer(cand,ITEM);
+
+  /* 경우가 둘로 갈리면 고르게 하지 않고 둘 다 보여준다 */
+  var split=null;
+  if(ITEM==="general"&&rc==="island")
+    split={g:"FRESH",opts:[["fresh","신선식품","청과 · 생선"],["processed","가공식품","상온 가공품"]]};
+  else if(ITEM==="general"&&rc==="dong"&&base.regionalCount>0)
+    split={g:"PRICE",opts:[["over","10만원 이상","거점 차량 배송"],["under","10만원 이하","CJ대한통운 택배"]]};
+
+  if(split){
+    var save=(split.g==="FRESH")?FRESH:PRICE, res=[];
+    split.opts.forEach(function(o){
+      if(split.g==="FRESH") FRESH=o[0]; else PRICE=o[0];
+      res.push({o:o,a:computeAnswer(cand,ITEM)});
+    });
+    if(split.g==="FRESH") FRESH=save; else PRICE=save;
+    $("result").innerHTML=
+      '<div class="card"><div class="stripe plain">'+
+        '<span class="place">'+esc(cand.label)+' · '+itemName+'</span>'+
+        '<span class="note" style="margin-left:auto">경우에 따라 아래처럼 갈립니다</span></div>'+
+      '<div class="bodyflat"><div class="panes">'+
+        res.map(function(r){return paneHtml(r.o[1],r.o[2],r.a);}).join("")+
+      '</div>'+(switcher?'<div class="panefoot">'+switcher+'</div>':'')+'</div></div>'+
+      moreTable(base.hits);
     bindSwitch(cands); return;
   }
 
-  var notes=(top.r.notes||[]).filter(function(n){return ITEM==="cold"||!/냉장육|정육/.test(n);});
-  if(top.e.post) notes=["명절 이후 사후배송 일정입니다"].concat(notes);
-  if(cand.note) notes=notes.concat([cand.note]);
-  if(mode==="parcel"&&blocked.length)
-    notes=["거점 차량이 들어가지 않는 지역이라 택배로만 발송됩니다 — "+blocked[0].j.why].concat(notes);
-  if(ITEM==="general"&&top.r.id==="cj-rural"&&rc!=="rural"){
-    notes=notes.filter(function(n){return n.indexOf("읍·면·리 지역이라")<0&&n.indexOf("택배로만 발송됩니다")<0;});
-    notes=[rc==="island"
-      ? "도서산간 지역이라 가공식품만 CJ대한통운 택배로 발송할 수 있습니다"
-      : "10만원 이하 주문이라 거점 차량이 아닌 CJ대한통운 택배로 발송합니다"].concat(notes);
-  }
-  if(blk&&blk.warn) notes=[blk.warn].concat(notes);
-  if(top.e.stale)
-    notes=["⚠ 관리자가 지정한 이관일이 행사 운영 기간을 넘었습니다. 관리자 설정에서 날짜를 다시 확인하세요."].concat(notes);
-
-  var vclass = mode==="parcel" ? "partial" : top.j.v;
-  var tag = mode==="parcel" ? "택배 배송" : (top.j.v==="yes"?"배송 가능":"조건부 가능");
-  var head = mode==="parcel" ? "택배로 발송" : "오늘 이관 가능한 가장 빠른 발송일";
-
-  var dl;
-  if(top.e.manual && top.e.cut && top.e.cut.stamp<=nowStamp()){
-    dl='<div class="deadline"><span class="k">관리자 지정</span>'+
-       '<span class="v">관리자가 정한 이관일입니다</span>'+
-       '<span class="left">매일 자동으로 하루씩 넘어갑니다</span></div>';
-  } else {
-    var L=leftText(top.e.cut.stamp);
-    dl='<div class="deadline"><span class="k">이관 마감 · 접수일 기준'+(top.e.manual?" · 관리자 지정":"")+'</span>'+
-       '<span class="v">'+fmtD(top.e.cut.iso)+' '+top.e.cut.t+'</span>'+
-       '<span class="left'+(L.urgent?" urgent":"")+'">'+L.t+'</span></div>';
+  if(!base.ok){
+    $("result").innerHTML=card("no",base.hard?"발송 불가":"배송 불가",esc(cand.label)+' · '+itemName,
+      '<div class="overline">'+(base.hard?"이 지역·품목은 보낼 수 없습니다":"결과")+'</div>'+
+      '<div class="answer">'+esc(base.title)+'</div>'+
+      '<div class="flag"><span>'+esc(base.reason)+'</span></div>'+
+      '<div class="facts">'+
+        ((base.shippable||[]).length
+          ?'<div>이 지역으로 보낼 수 있는 품목 <b>'+esc(base.shippable.join(" · "))+'</b></div>'
+          :'<div>이 지역으로 보낼 수 있는 품목이 없습니다.</div>')+
+        (base.hard?'<div>고객에게는 발송이 불가하다고 안내하고 주문을 취소·변경해야 합니다.</div>':'')+
+      '</div>'+switcher)+moreTable(base.hits);
+    bindSwitch(cands); return;
   }
 
-  $("result").innerHTML=card(vclass,tag,esc(cand.label)+' · '+itemName,
-    '<div class="overline">'+head+'</div>'+
+  var top=base.top;
+  $("result").innerHTML=card(base.vclass,base.tag,esc(cand.label)+' · '+itemName,
+    '<div class="overline">'+(base.mode==="parcel"?"택배로 발송":"오늘 이관 가능한 가장 빠른 발송일")+'</div>'+
     '<div class="answerRow">'+
       '<div class="answer">'+fmtD(top.e.date)+'</div>'+
       '<div class="via"><span class="vk">보내는 곳</span><b>'+esc(top.r.center)+'</b>'+
         (top.r.sub?'<span class="vs">'+esc(top.r.sub)+'</span>':'')+'</div>'+
-    '</div>'+dl+
+    '</div>'+dlHtml(top.e)+
     '<div class="facts">'+
       '<div>취급 품목 '+esc(top.r.itemsText||"")+'</div>'+
-      (mode==="center"?'<div>판정 근거 '+esc(top.j.why)+'</div>':'')+
+      (base.mode==="center"?'<div>판정 근거 '+esc(top.j.why)+'</div>':'')+
       '</div>'+
-    (notes.length?'<div class="flag">'+notes.map(function(n){return '<span>'+esc(n)+'</span>';}).join("")+'</div>':'')+
-    switcher)+moreTable(hits);
+    (base.notes.length?'<div class="flag">'+base.notes.map(function(n){return '<span>'+esc(n)+'</span>';}).join("")+'</div>':'')+
+    switcher)+moreTable(base.hits);
   bindSwitch(cands);
+}
+
+/* 한 조건에 대한 답을 계산한다 (화면은 만들지 않는다) */
+function computeAnswer(cand,item){
+  var out={hits:[],regionalCount:0};
+  var blk=blockFor(cand,item);
+  var hits=searchRoutes(cand,item); out.hits=hits;
+  function byDate(a,b){
+    var m=(a.e.manual?0:1)-(b.e.manual?0:1); if(m) return m;
+    return a.e.date<b.e.date?-1:a.e.date>b.e.date?1:0;
+  }
+  var regional=hits.filter(function(h){return !h.r.nationwide&&h.j.v!=="no"&&h.e;}).sort(byDate);
+  var parcel  =hits.filter(function(h){return h.r.nationwide&&h.e;}).sort(byDate);
+  var blocked =hits.filter(function(h){return !h.r.nationwide&&h.j.v==="no";});
+  var anyRegional=hits.some(function(h){return !h.r.nationwide&&h.j.v!=="no";});
+  out.regionalCount=regional.length;
+  if(blk&&blk.reason){
+    out.ok=false; out.hard=true; out.title="발송 불가"; out.reason=blk.reason;
+    out.shippable=shippableItems(cand); return out;
+  }
+  var hanjin=hits.filter(function(h){return h.r.items.indexOf("hanjin")>-1&&h.e;}).sort(byDate);
+  var cjHit=hits.filter(function(h){return h.r.id==="cj-rural"&&h.e;})[0];
+  var rc=regionClass(cand), top, mode;
+  if(item==="general"&&cjHit&&((rc==="dong"&&PRICE==="under")||(rc==="island"&&FRESH==="processed"))){
+    top=cjHit; mode="parcel";
+  }
+  else if(item==="hanjin"&&hanjin.length){ top=hanjin[0]; mode="parcel"; }
+  else if(regional.length){ top=regional[0]; mode="center"; }
+  else if(parcel.length){ top=parcel[0]; mode="parcel"; }
+  else {
+    var ended=hits.some(function(h){return h.j.v!=="no";});
+    out.ok=false;
+    out.title=ended?"남은 발송일이 없습니다":"배송 불가";
+    var noWhy=(blocked[0]&&blocked[0].j.why)||
+              ((hits.filter(function(h){return h.j.v==="no";})[0]||{j:{}}).j.why);
+    out.reason=ended?"행사 운영 기간이 끝났거나 모든 이관 마감이 지났습니다."
+                    :(noWhy||"이 지역은 배송 권역이 아닙니다.");
+    out.shippable=shippableItems(cand); return out;
+  }
+  var notes=(top.r.notes||[]).filter(function(n){return item==="cold"||!/냉장육|정육/.test(n);});
+  if(top.e.post) notes=["명절 이후 사후배송 일정입니다"].concat(notes);
+  if(cand.note) notes=notes.concat([cand.note]);
+  if(mode==="parcel"&&blocked.length)
+    notes=["거점 차량이 들어가지 않는 지역이라 택배로만 발송됩니다 — "+blocked[0].j.why].concat(notes);
+  if(top.r.id==="cj-rural"&&rc!=="rural"){
+    notes=notes.filter(function(n){return n.indexOf("읍·면·리 지역이라")<0&&n.indexOf("택배로만 발송됩니다")<0;});
+    var endedRegional=hits.some(function(h){return !h.r.nationwide&&h.j.v!=="no"&&!h.e;});
+    notes=[ rc==="island" ? "도서산간 지역이라 가공식품만 CJ대한통운 택배로 발송할 수 있습니다"
+      : !anyRegional ? "거점 차량 배송 권역이 아니어서 CJ대한통운 택배로 발송합니다"
+      : endedRegional ? "거점 운영 기간이 끝나 CJ대한통운 택배로 발송합니다"
+      : (item==="general"&&PRICE==="under") ? "10만원 이하 주문이라 거점 차량이 아닌 CJ대한통운 택배로 발송합니다"
+      : "거점 차량 배송 권역이 아니어서 CJ대한통운 택배로 발송합니다"].concat(notes);
+  }
+  if(blk&&blk.warn) notes=[blk.warn].concat(notes);
+  if(top.e.stale) notes=["⚠ 관리자가 지정한 이관일이 행사 운영 기간을 넘었습니다. 관리자 설정에서 날짜를 다시 확인하세요."].concat(notes);
+  out.ok=true; out.top=top; out.mode=mode; out.notes=notes;
+  out.vclass=(mode==="parcel")?"partial":top.j.v;
+  out.tag=(mode==="parcel")?"택배 배송":(top.j.v==="yes"?"배송 가능":"조건부 가능");
+  return out;
+}
+function dlHtml(e){
+  if(e.manual&&e.cut&&e.cut.stamp<=nowStamp())
+    return '<div class="deadline"><span class="k">관리자 지정</span>'+
+           '<span class="v">관리자가 정한 이관일입니다</span>'+
+           '<span class="left">매일 자동으로 하루씩 넘어갑니다</span></div>';
+  var L=leftText(e.cut.stamp);
+  return '<div class="deadline"><span class="k">이관 마감 · 접수일 기준'+(e.manual?" · 관리자 지정":"")+'</span>'+
+         '<span class="v">'+fmtD(e.cut.iso)+' '+e.cut.t+'</span>'+
+         '<span class="left'+(L.urgent?" urgent":"")+'">'+L.t+'</span></div>';
+}
+function paneHtml(label,sub,a){
+  if(!a.ok)
+    return '<div class="pane off">'+
+      '<div class="phead"><span class="pk">'+esc(label)+'</span>'+
+        '<span class="pbadge">'+esc(a.hard?"발송 불가":a.title)+'</span></div>'+
+      '<div class="ps">'+esc(sub)+'</div>'+
+      '<div class="answer">'+esc(a.title)+'</div>'+
+      '<div class="preason">'+esc(a.reason)+'</div></div>';
+  var cls=(a.vclass==="yes")?"ok":"warn";
+  return '<div class="pane '+cls+'">'+
+    '<div class="phead"><span class="pk">'+esc(label)+'</span>'+
+      '<span class="pbadge">'+esc(a.tag)+'</span></div>'+
+    '<div class="ps">'+esc(sub)+'</div>'+
+    '<div class="answer">'+fmtD(a.top.e.date)+'</div>'+
+    '<div class="via"><span class="vk">보내는 곳</span><b>'+esc(a.top.r.center)+'</b>'+
+      (a.top.r.sub?'<span class="vs">'+esc(a.top.r.sub)+'</span>':'')+'</div>'+
+    dlHtml(a.top.e)+
+    (a.notes.length?'<div class="flag"><span>'+esc(a.notes[0])+'</span></div>':'')+
+    '</div>';
 }
 function bindSwitch(){
   Array.prototype.forEach.call($("result").querySelectorAll(".chip[data-l]"),function(b){
